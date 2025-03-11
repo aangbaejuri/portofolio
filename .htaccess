@@ -1,0 +1,19 @@
+Options -Indexes
+RewriteEngine On
+
+# php
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^(.*)$ $1.php [L,QSA]
+
+# html
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.html -f
+RewriteRule ^(.*)$ $1.html [L,QSA]
+
+RewriteRule ^(.*)/index$ /$1/ [R=301,L]
+RewriteRule ^index$ / [R=301,L]
+
+# error
+ErrorDocument 403 /error.php
+ErrorDocument 404 /error.php

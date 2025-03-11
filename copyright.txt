@@ -1,0 +1,43 @@
+|=================================================================|
+|                       Projek sehari jadi                        |
+|=================================================================|
+
+|============================INSTALASI============================|
+| 1. Silakan buat database baru di phpMyAdmin                     |
+| 2. Masuk ke phpMyAdmin lalu buka Database baru yang dibuat      |
+| 3. Import file .sql ke dalam database baru                      |
+| 4. Masuk ke File Manager lalu buka file config.php Lalukan      |
+|    perubahan sesuai dengan data database pada bagian ini:       |
+|       $conn = mysqli_connect(                                   |
+|           'localhost', // Abaikan bagian ini                    |
+|           'username',                                           |
+|           'password',                                           |
+|           'database'                                            |
+|       );                                                        |
+| 5. Simpan                                                       |
+|=================================================================|
+
+|============================INFORMASI============================|
+| Proyek ini dikembangkan oleh Himpunan Mahasiswa Teknologi       |
+| Informasi (HMTI) Institut Teknologi dan Bisnis Banten (IB)      |
+| sebagai salah satu bentuk nyata kontribusi kami dalam membangun |
+| ekosistem pembelajaran dan pengembangan keterampilan di bidang  |
+| teknologi informasi.                                            |
+| --------------------------------------------------------------- |
+| Project Manager: Aang Baejuri                                   |
+|                - https://aangbaejuri.id                         |
+|                - https://github.com/aangbaejuri                 |
+|                - https://instagram.com/aangbaejuri              |
+|                - https://www.linkedin.com/in/aangbaejuri        |
+|                - https://wa.em/628993123999                     |
+|=================================================================|
+
+|===========================PERINGATAN============================|
+| - Dilarang menjual source code proyek ini.                      |
+| - Proyek ini boleh digunakan oleh siapapun.                     |
+| - Proyek ini boleh diubah sesuai kebutuhan.                     |
+| - Anda dilarang untuk menghapus atau menghilangkan informasi    |
+|    tentang pengembang pertama dari proyek ini, terutama pada    |
+|    halaman pengembang.                                          |
+| - Dilarang melestarikan budaya "Peringatan Adalah Perintah".    |
+|=================================================================|

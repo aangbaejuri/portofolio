@@ -1,0 +1,206 @@
+<?php 
+require '../../config.php';
+require '../lib/session.php';
+require '../lib/header.php';
+
+if (isset($_POST['hapus'])) {
+    $post_id = $conn->real_escape_string($_POST['id']);
+
+    $cek_postingan = $conn->query("SELECT * FROM postingan WHERE id = '$post_id'");
+
+    if ($cek_postingan->num_rows == 0) {
+        $_SESSION['response'] = array(
+            'color' => 'danger',
+            'icon' => 'close-circle',
+            'title' => 'Gagal',
+            'msg' => 'Postingan tidak ditemukan.'
+        );
+    } else {
+        $row = $cek_postingan->fetch_assoc();
+        $bannerPath = '../../' . $row['banner'];
+
+        if ($conn->query("DELETE FROM postingan WHERE id = '$post_id'") == true) {
+            if (file_exists($bannerPath)) {
+                unlink($bannerPath);
+            }
+
+            $_SESSION['response'] = array(
+                'color' => 'success',
+                'icon' => 'check-circle',
+                'title' => 'Berhasil',
+                'msg' => 'Postingan berhasil dihapus.'
+            );
+        } else {
+            $_SESSION['response'] = array(
+                'color' => 'danger',
+                'icon' => 'close-circle',
+                'title' => 'Gagal',
+                'msg' => 'Postingan gagal dihapus. <hr />' . $conn->error
+            );
+        }
+    }
+
+    header("Location: " . $aang_url . "admin/postingan/");
+    exit();
+}
+
+require '../lib/sidebar.php';
+?>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card stretch stretch-full">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="mdi mdi-post-outline me-1"></i> Postingan
+                    </h4>
+                    <a href="<?= $aang_url ?>admin/postingan/tambah" class="btn btn-sm btn-primary">
+                        <i class="mdi mdi-plus"></i> Data
+                    </a>
+                </div>
+                <div class="card-body custom-card-action">
+                    <form id="filterForm" action="" method="post">
+                        <input type="hidden" name="csrf_token" value="<?= $config['csrf_token'] ?>">
+                        <input type="hidden" name="page" value="<?= isset($_POST['page']) ? (int)$_POST['page'] : 1 ?>">
+
+                        <div class="row">
+                            <div class="col-lg-4 mb-3">
+                                <label class="form-label">Tampilkan Beberapa</label>
+                                <select name="tampil_beberapa" class="form-control" onchange="document.getElementById('filterForm').submit()">
+                                    <option value="10" <?= isset($_POST['tampil_beberapa']) && $_POST['tampil_beberapa'] == 10 ? 'selected' : '' ?>>Default</option>
+                                    <option value="20" <?= isset($_POST['tampil_beberapa']) && $_POST['tampil_beberapa'] == 20 ? 'selected' : '' ?>>20</option>
+                                    <option value="50" <?= isset($_POST['tampil_beberapa']) && $_POST['tampil_beberapa'] == 50 ? 'selected' : '' ?>>50</option>
+                                    <option value="100" <?= isset($_POST['tampil_beberapa']) && $_POST['tampil_beberapa'] == 100 ? 'selected' : '' ?>>100</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-8 mb-3">
+                                <label class="form-label">Cari Data</label>
+                                <div class="input-group">
+                                    <input name="cari_data" type="search" class="form-control" placeholder="Cari..." value="<?= isset($_POST['cari_data']) ? htmlspecialchars($_POST['cari_data'], ENT_QUOTES) : '' ?>">
+                                    <button class="btn btn-primary" type="submit"><i class="mdi mdi-magnify"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead class="bg-light">
+                                <tr>
+                                    <td>#</td>
+                                    <td style="min-width: 180px;">Judul</td>
+                                    <td style="min-width: 150px;">Waktu</td>
+                                    <td class="text-center">Aksi</td>
+                                </tr>
+                            </thead>
+                            <tbody id="body_data">
+                                <?php
+                                $limit = isset($_POST['tampil_beberapa']) ? (int)$_POST['tampil_beberapa'] : 10;
+                                $page = isset($_POST['page']) ? (int)$_POST['page'] : 1;
+                                $offset = ($page - 1) * $limit;
+                                $cari_data = isset($_POST['cari_data']) ? $_POST['cari_data'] : '';
+
+                                $where_clause = [];
+
+                                if (!empty($cari_data)) {
+                                    $where_clause[] = "judul LIKE '%{$conn->real_escape_string($cari_data)}%'";
+                                }
+
+                                $where = count($where_clause) > 0 ? "WHERE " . implode(' AND ', $where_clause) : '';
+
+                                $query = "SELECT * FROM postingan {$where} ORDER BY id DESC LIMIT {$limit} OFFSET {$offset}";
+                                $result = $conn->query($query);
+                                $total_query = "SELECT COUNT(*) as total FROM postingan {$where}";
+                                $total_result = $conn->query($total_query);
+                                $total_data = $total_result->fetch_assoc()['total'];
+
+                                if ($result->num_rows > 0) {
+                                    $no = $offset + 1;
+                                    while ($row_data = $result->fetch_assoc()) {
+                                ?>
+                                        <tr>
+                                            <td class="align-middle"><?= $no++ ?></td>
+                                            <td class="align-middle">
+                                                <input class="form-control" value="<?= $row_data['judul'] ?>" disabled>
+                                            </td>
+                                            <td class="align-middle">
+                                                <?= datetime_indo($row_data['datetime']) ?>
+                                            </td>
+                                            <td class="text-center align-middle">
+                                                <form action="" method="post" id="deleteForm<?= $row_data['id'] ?>">
+                                                    <input type="hidden" name="id" value="<?= $row_data['id'] ?>">
+                                                    <input type="hidden" name="hapus" value="1">
+                                                    <a href="<?= $aang_url ?>admin/postingan/edit?id=<?= $row_data['id'] ?>" class="btn btn-sm btn-primary">
+                                                        <i class="mdi mdi-pencil"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete(<?= $row_data['id'] ?>)">
+                                                        <i class="mdi mdi-delete"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                <?php
+                                    }
+                                } else {
+                                ?>
+                                    <tr>
+                                        <td colspan="4" class="text-center">Data tidak tersedia.</td>
+                                    </tr>
+                                <?php } ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <p class="mb-0">
+                        Data: 
+                        <span class="fw-semibold"><?= $total_data ?></span>
+                    </p>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination mb-0" id="button_pagination">
+                            <?php
+                            $pages = ceil($total_data / $limit);
+                            if ($total_data > $limit) {
+                                if ($page > 1) {
+                                    echo '<li class="page-item"><a class="page-link" href="javascript:void(0);" onclick="changePage(1)">First</a></li>';
+                                    echo '<li class="page-item"><a class="page-link" href="javascript:void(0);" onclick="changePage(' . ($page - 1) . ')"><i class="bi bi-arrow-left"></i></a></li>';
+                                }
+                                if ($page < $pages) {
+                                    echo '<li class="page-item"><a class="page-link" href="javascript:void(0);" onclick="changePage(' . ($page + 1) . ')"><i class="bi bi-arrow-right"></i></a></li>';
+                                    echo '<li class="page-item"><a class="page-link" href="javascript:void(0);" onclick="changePage(' . $pages . ')">Last</a></li>';
+                                }
+                            }
+                            ?>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmDelete(id) {
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data yang dihapus tidak bisa dikembalikan.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('deleteForm' + id).submit();
+                }
+            });
+        }
+
+        function changePage(page) {
+            const form = document.getElementById('filterForm');
+            form.querySelector('input[name="page"]').value = page;
+            form.submit();
+        }
+    </script>
+
+<?php 
+require '../lib/footer.php';
+?>
